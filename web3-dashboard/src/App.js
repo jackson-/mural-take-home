@@ -137,7 +137,7 @@ const App = () => {
           </thead>
           <tbody>
             {transactions.map(( tx, idx ) => {
-              if(tx.chainId == 5){
+              if(tx.chainId == 5 && idx < 100){
                 return (
                   <tr key={idx}>
                     <td><a href={`https://goerli.etherscan.io/tx/${tx.hash}`} target="_blank">{tx.hash}</a></td>
