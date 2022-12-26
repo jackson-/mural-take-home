@@ -5,41 +5,45 @@ import './App.css';
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState('');
+  const [currentNetwork, setCurrentNetwork] = useState('');
 
-  const checkIfWalletIsConnected = async () => {
-		const { ethereum } = window;
+  const setAccountAndNetwork = async () => {
 
-		if (!ethereum) {
-			console.log('Make sure you have MetaMask or WalletConnect!');
-			return;
-		} else {
-			console.log('We have the ethereum object', ethereum);
-		}
+  }
 
-		const accounts = await ethereum.request({ method: 'eth_accounts' });
+  
+  const checkForWalletChanges = async () => {
+    if(window.ethereum) {
+      window.ethereum.on('chainChanged', () => {
+        connectWallet()
+      })
+      window.ethereum.on('accountsChanged', () => {
+        connectWallet()
+      })
+    }
+  }
 
-		if (accounts.length !== 0) {
-			const account = accounts[0];
-			console.log('Found an authorized account:', account);
-			setCurrentAccount(account);
-		} else {
-			console.log('No authorized account found');
-		}
-	};
-
-  const connectWallet = async () => {
+  const connectWallet = async (clicked=false) => {
     try {
       const { ethereum } = window;
 
       if (!ethereum) {
-        alert("Get MetaMask or WalletConnect to access our site :)");
+        clicked ? alert("You need MetaMask or WalletConnect to access our site :)") : console.log("This user needs MetaMask or WalletConnect to access our site :)");
         return;
       }
 			
       const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-      
-      console.log("Connected", accounts[0]);
-      setCurrentAccount(accounts[0]);
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const { chainId } = await provider.getNetwork()
+      if (accounts.length !== 0) {
+        const account = accounts[0];
+        console.log('Found an authorized account:', account);
+        console.log("Chain ID: ", chainId)
+        setCurrentAccount(accounts[0]);
+        setCurrentNetwork(chainId);
+      } else {
+        console.log('No authorized account found');
+      }
     } catch (error) {
       console.log(error)
     }
@@ -48,7 +52,7 @@ const App = () => {
   const renderNotConnectedContainer = () => (
 		<div className="connect-wallet-container">
       {/* Call the connectWallet function we just wrote when the button is clicked */}
-			<button onClick={connectWallet} className="cta-button connect-wallet-button">
+			<button onClick={() => connectWallet(true)} className="cta-button connect-wallet-button">
 				Connect Wallet
 			</button>
 		</div>
@@ -56,14 +60,18 @@ const App = () => {
 
   const renderDashboard = () => {
     return (
-      <div>
+      <div className="dashboard-container">
         <h2>Your Dashboard goes here</h2>
+        {currentNetwork != 5 &&
+          <p>Please switch your network to Goerli</p>
+        }
       </div>
     )
   }
 
   useEffect(() => {
-		checkIfWalletIsConnected();
+		connectWallet();
+    checkForWalletChanges();
 	}, []);
 
 	return (
@@ -71,7 +79,7 @@ const App = () => {
 			<div className="container">
 				<div className="header-container">
 					<header>
-						<div className="left">
+						<div className="header">
 							<p className="title">My Web3 Dashboard</p>
 							<p className="subtitle">All your web3 needs in one place</p>
 						</div>
@@ -79,7 +87,7 @@ const App = () => {
 				</div>
 				
 				{!currentAccount && renderNotConnectedContainer()}
-				{/* Render the input form if an account is connected */}
+				{/* Render the dashboard if an account is connected */}
 				{currentAccount && renderDashboard()}
 			</div>
 		</div>
