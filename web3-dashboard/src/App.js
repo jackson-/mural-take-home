@@ -46,9 +46,13 @@ const App = () => {
         console.log("BALANCE ", balanceInEther)
         console.log('Found an authorized account:', account);
         console.log("Chain ID: ", chainId)
+        const escanProvider = new ethers.providers.EtherscanProvider();
+        const history = await escanProvider.getHistory(account);
+        console.log("HISTORY ", history)
         setCurrentAccount(accounts[0]);
         setCurrentNetwork(chainId);
         setBalance(balanceInEther);
+        setTransactions(history);
       } else {
         console.log('No authorized account found');
       }
@@ -118,6 +122,38 @@ const App = () => {
     )
   }
 
+  const renderTransactionTable = () => {
+    return(
+      <div className="transaction-table-container">
+        <h3>Transaction History</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Tx Hash</th>
+              <th>Amount</th>
+              <th>To Address</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transactions.map(( tx, idx ) => {
+              if(tx.chainId == 5){
+                return (
+                  <tr key={idx}>
+                    <td><a href={`https://goerli.etherscan.io/tx/${tx.hash}`} target="_blank">{tx.hash}</a></td>
+                    <td>{ethers.utils.formatEther(tx.value)}</td>
+                    <td>{tx.to}</td>
+                    <td>{new Date(tx.timestamp*1000).toUTCString()}</td>
+                  </tr>
+                );
+              }
+            })}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   const renderDashboard = () => {
     return (
       <div className="dashboard-container">
@@ -127,6 +163,7 @@ const App = () => {
         {currentNetwork == 5 &&
           renderTransactionForm()
         }
+        {renderTransactionTable()}
       </div>
     )
   }
