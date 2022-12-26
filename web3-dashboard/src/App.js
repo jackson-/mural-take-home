@@ -7,8 +7,14 @@ const App = () => {
   const network = 'goerli';
   const [currentAccount, setCurrentAccount] = useState('');
   const [currentNetwork, setCurrentNetwork] = useState('');
-  const [balance, setBalance] = useState('');
+  const [balance, setBalance] = useState(0);
+  const [toAddress, setToAddress] = useState('');
+  const [sendAmount, setSendAmount] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
   const [transactions, setTransactions] = useState([]);
+
+
+  // Wallet methods
   
   const checkForWalletChanges = async () => {
     if(window.ethereum) {
@@ -51,6 +57,26 @@ const App = () => {
     }
   }
 
+  const sendTransactionClicked = async (e) => {
+    e.preventDefault();
+    const ethereum = window.ethereum;
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    const params = [{
+      from: currentAccount,
+      to: toAddress,
+      value: ethers.utils.parseUnits(sendAmount, 'ether').toHexString()
+    }];
+    try{
+      const transactionHash = await provider.send('eth_sendTransaction', params)
+      console.log('transactionHash is ' + transactionHash);
+    } catch(error) {
+      console.log("ERROR ", error)
+      setErrorMessage(error.message)
+    }
+  }
+
+  // Render methods
+
   const renderNotConnectedContainer = () => (
 		<div className="connect-wallet-container">
       {/* Call the connectWallet function we just wrote when the button is clicked */}
@@ -60,10 +86,36 @@ const App = () => {
 		</div>
 	);
 
+  const renderBalance = () => {
+    return(
+      <div className="balance-container">
+        <p className="balance">Your current balance: {balance} Goerli ETH</p>
+      </div>
+    )
+  }
+  
   const renderTransactionForm = () => {
-    <div className="transaction-form-container">
-      
-    </div>
+    return(
+      <div className="transaction-form-container">
+        <h3>Send a transaction</h3>
+        <p className="transaction-error">{errorMessage}</p>
+        <form className="transaction-form">
+          <input
+            type="text"
+            value={toAddress}
+            placeholder="Enter wallet address (Ox...) or ENS domain to send to"
+            onChange={e => setToAddress(e.target.value)}
+          />
+          <input
+            type="number"
+            value={sendAmount}
+            placeholder="ETH amount to send"
+            onChange={e => setSendAmount(e.target.value)}
+          />
+          <button onClick={sendTransactionClicked}>Send</button>
+        </form>
+      </div>
+    )
   }
 
   const renderDashboard = () => {
@@ -71,11 +123,9 @@ const App = () => {
       <div className="dashboard-container">
         <h2>Your Dashboard goes here</h2>
         {/* Check to make sure wallet is on Goerli */}
-        {currentNetwork != 5 &&
-          <p>Please switch your network to Goerli</p>
-        }
+        {renderBalance()}
         {currentNetwork == 5 &&
-          <p>Your current balance: {balance} Goerli ETH</p>
+          renderTransactionForm()
         }
       </div>
     )
@@ -99,7 +149,11 @@ const App = () => {
 				</div>
 				{!currentAccount && renderNotConnectedContainer()}
 				{/* Render the dashboard if an account is connected */}
-				{currentAccount && renderDashboard()}
+        {currentAccount && currentNetwork != 5 &&
+          <p>Please switch your network to Goerli</p>
+        }
+				{currentAccount && currentNetwork == 5 && renderDashboard()}
+        
 			</div>
 		</div>
 	);
