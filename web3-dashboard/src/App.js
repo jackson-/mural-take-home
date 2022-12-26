@@ -4,13 +4,11 @@ import {ethers} from "ethers";
 import './App.css';
 
 const App = () => {
+  const network = 'goerli';
   const [currentAccount, setCurrentAccount] = useState('');
   const [currentNetwork, setCurrentNetwork] = useState('');
-
-  const setAccountAndNetwork = async () => {
-
-  }
-
+  const [balance, setBalance] = useState('');
+  const [transactions, setTransactions] = useState([]);
   
   const checkForWalletChanges = async () => {
     if(window.ethereum) {
@@ -37,10 +35,14 @@ const App = () => {
       const { chainId } = await provider.getNetwork()
       if (accounts.length !== 0) {
         const account = accounts[0];
+        const balance = await provider.getBalance(accounts[0])
+        const balanceInEther = ethers.utils.formatEther(balance)
+        console.log("BALANCE ", balanceInEther)
         console.log('Found an authorized account:', account);
         console.log("Chain ID: ", chainId)
         setCurrentAccount(accounts[0]);
         setCurrentNetwork(chainId);
+        setBalance(balanceInEther);
       } else {
         console.log('No authorized account found');
       }
@@ -58,12 +60,22 @@ const App = () => {
 		</div>
 	);
 
+  const renderTransactionForm = () => {
+    <div className="transaction-form-container">
+      
+    </div>
+  }
+
   const renderDashboard = () => {
     return (
       <div className="dashboard-container">
         <h2>Your Dashboard goes here</h2>
+        {/* Check to make sure wallet is on Goerli */}
         {currentNetwork != 5 &&
           <p>Please switch your network to Goerli</p>
+        }
+        {currentNetwork == 5 &&
+          <p>Your current balance: {balance} Goerli ETH</p>
         }
       </div>
     )
@@ -85,7 +97,6 @@ const App = () => {
 						</div>
 					</header>
 				</div>
-				
 				{!currentAccount && renderNotConnectedContainer()}
 				{/* Render the dashboard if an account is connected */}
 				{currentAccount && renderDashboard()}
