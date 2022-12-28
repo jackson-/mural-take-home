@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@gnosis.pm/safe-core-sdk": "^3.2.0",
+    "@safe-global/safe-ethers-lib": "^1.8.0"
+  }
+}
