@@ -42,12 +42,8 @@ const Dashboard = () => {
         const account = accounts[0];
         const balance = await provider.getBalance(accounts[0])
         const balanceInEther = ethers.utils.formatEther(balance)
-        console.log("BALANCE ", balanceInEther)
-        console.log('Found an authorized account:', account);
-        console.log("Chain ID: ", chainId)
         const escanProvider = new ethers.providers.EtherscanProvider();
         const history = await escanProvider.getHistory(account);
-        console.log("HISTORY ", history)
         setCurrentAccount(accounts[0]);
         setCurrentNetwork(chainId);
         setBalance(balanceInEther);
@@ -71,9 +67,7 @@ const Dashboard = () => {
     }];
     try{
       const transactionHash = await provider.send('eth_sendTransaction', params)
-      console.log('transactionHash is ' + transactionHash);
     } catch(error) {
-      console.log("ERROR ", error)
       setErrorMessage(error.message)
     }
   }
@@ -189,17 +183,3 @@ const Dashboard = () => {
 }
 
 export default Dashboard;
-
-
-// const { ethers } = require('ethers');
-// const { Safe } = require('safe-core-sdk');
-
-// async function changeApproversAndThreshold(safeAddress, provider, operation, newApprovers, threshold) {
-//   // Create a Safe object using the address of the Safe contract
-//   const safe = new Safe(safeAddress, provider);
-
-//   // Change the approvers for an operation
-//   await safe.changeApprovers(operation, newApprovers);
-
-//   // Change the confirmation threshold for an operation
-//   await safe.changeThreshold(operation, thres

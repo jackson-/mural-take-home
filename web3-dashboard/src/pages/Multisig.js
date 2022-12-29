@@ -12,6 +12,7 @@ const Multisig = () => {
     const [ownerInput, setOwnerInput] = useState('');
     const [thresholdInput, setThresholdInput] = useState('');
     const [safe, setSafe] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     
     const nickNames = {}
 
@@ -29,9 +30,7 @@ const Multisig = () => {
                 signerOrProvider: safeOwner
             })
             const safeFactory = await SafeFactory.create({ ethAdapter });
-            console.log("FACTORY ", safeFactory)
             const safeAccountConfig = {owners: newOwners, threshold: newThreshold};
-            console.log("CONFIG ", safeAccountConfig)
             const safeSdk = await safeFactory.deploySafe({safeAccountConfig});
             for (let owner in newOwners) {
                 nickNames[owner] = '';
@@ -41,6 +40,7 @@ const Multisig = () => {
             setSafe(safeSdk);
         } catch(error) {
             console.log(error);
+            setErrorMessage(error)
         }
     }
 
@@ -57,6 +57,7 @@ const Multisig = () => {
             setOwners(newOwners)
         } catch(error) {
             console.log(error);
+            setErrorMessage(error)
         }
     }
 
@@ -66,19 +67,17 @@ const Multisig = () => {
         setOwnerInput('');
         setThresholdInput('');
         try{
-            console.log(newThreshold, confirmationThreshold)
             if (newThreshold !== confirmationThreshold){
                 await safe.createChangeThresholdTx(newThreshold);
-                console.log('DONE ')
                 setConfirmationThreshold(newThreshold);
             }
         } catch(error) {
             console.log(error);
+            setErrorMessage(error)
         }
     }
 
     const removeOwner = async (owner) => {
-        console.log(owner)
         try{
             await safe.createRemoveOwnerTx(owner);
             const index = owners.indexOf(owner);
@@ -88,6 +87,7 @@ const Multisig = () => {
             setOwners(newOwners)
         } catch(error) {
             console.log(error);
+            setErrorMessage(error)
         }
     }
 
@@ -146,6 +146,7 @@ const Multisig = () => {
     return (
         <div className="multisig-container">
             <h1>Multisig Wallet</h1>
+            <p>{errorMessage}</p>
             {safe && <p>Confirmation Threshold: {confirmationThreshold}</p>}
             {!safe && renderWalletCreate()}
             {safe && renderWalletEdit()}
