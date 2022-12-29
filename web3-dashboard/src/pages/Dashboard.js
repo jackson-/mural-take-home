@@ -136,7 +136,7 @@ const Dashboard = () => {
           </thead>
           <tbody>
             {transactions.map(( tx, idx ) => {
-              if(idx < 100){
+              if(idx < 10){
                 return (
                   <tr key={idx}>
                     <td><a href={`https://goerli.etherscan.io/tx/${tx.hash}`} target="_blank" rel="noreferrer">{tx.hash}</a></td>

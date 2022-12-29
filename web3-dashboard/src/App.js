@@ -1,8 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
-
-import Dashboard from "./pages/Dashboard";
-import Multisig from "./pages/Multisig";
+import { Outlet } from "react-router-dom";
 import Navbar from './components/Navbar'
 
 import './App.css';
@@ -10,13 +7,10 @@ import './App.css';
 const App = () => {
 
     return(
-      <Router>
+      <div>
         <Navbar />
-        <Routes>
-            <Route exact path='/' element={<Dashboard />} />
-            <Route path='/multisig' element={<Multisig />} />
-        </Routes>
-      </Router>
+        <Outlet />
+      </div>
     )
   
 }
