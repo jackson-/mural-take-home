@@ -30,10 +30,9 @@ const Multisig = () => {
             })
             const safeFactory = await SafeFactory.create({ ethAdapter });
             console.log("FACTORY ", safeFactory)
-            const safeAccountConfig = {newOwners, newThreshold};
+            const safeAccountConfig = {owners: newOwners, threshold: newThreshold};
             console.log("CONFIG ", safeAccountConfig)
             const safeSdk = await safeFactory.deploySafe({safeAccountConfig});
-            debugger
             for (let owner in newOwners) {
                 nickNames[owner] = '';
             }
@@ -45,19 +44,48 @@ const Multisig = () => {
         }
     }
 
-    const editWallet = async (e) => {
+    const addOwner = async (e) => {
         e.preventDefault();
-        const newOwners = e.target[0].value.split(',');
-        const newThreshold = e.target[1].value;
+        const newOwner = e.target[0].value;
         setOwnerInput('');
         setThresholdInput('');
         try{
-            if (owners.sort() !== newOwners.sort()){
-                debugger
-            }
+            await safe.createAddOwnerTx(newOwner);
+            const newOwners = [...owners]
+            newOwners.push(newOwner)
+            nickNames[newOwner] = ''
+            setOwners(newOwners)
+        } catch(error) {
+            console.log(error);
+        }
+    }
+
+    const editThreshold = async (e) => {
+        e.preventDefault();
+        const newThreshold = e.target[0].value;
+        setOwnerInput('');
+        setThresholdInput('');
+        try{
+            console.log(newThreshold, confirmationThreshold)
             if (newThreshold !== confirmationThreshold){
-                debugger
+                await safe.createChangeThresholdTx(newThreshold);
+                console.log('DONE ')
+                setConfirmationThreshold(newThreshold);
             }
+        } catch(error) {
+            console.log(error);
+        }
+    }
+
+    const removeOwner = async (owner) => {
+        console.log(owner)
+        try{
+            await safe.createRemoveOwnerTx(owner);
+            const index = owners.indexOf(owner);
+            const newOwners = [...owners]
+            newOwners.splice(index, 1)
+            delete nickNames[owner]
+            setOwners(newOwners)
         } catch(error) {
             console.log(error);
         }
@@ -65,11 +93,26 @@ const Multisig = () => {
 
 
     // Render methods
-    const renderWalletForm = (safe) => (
+    const renderWalletCreate = () => (
         <div className="multisig-form-container">
-            {safe ? <p>Edit Safe:</p> : <p>Create Safe</p>}
-            <form onSubmit={safe ? editWallet : createWallet} className="multisig-create-form">
+            <p>Create Safe</p>
+            <form onSubmit={createWallet} className="multisig-create-form">
                 <input type="text" value={ownerInput} onChange={(e) => setOwnerInput(e.target.value)} placeholder="Owner addresses seperated by comma"></input>
+                <input type="number" value={thresholdInput} onChange={(e) => setThresholdInput(e.target.value)} placeholder="Confirmation threshold"></input>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    )
+
+    const renderWalletEdit = () => (
+        <div className="multisig-form-container">
+            <p>Add Owner</p>
+            <form onSubmit={addOwner} className="edit-owners-form">
+                <input type="text" value={ownerInput} onChange={(e) => setOwnerInput(e.target.value)} placeholder="Owner addresses seperated by comma"></input>
+                <button type="submit">Submit</button>
+            </form>
+            <p>Change Threshold</p>
+            <form onSubmit={editThreshold} className="edit-threshold-form">
                 <input type="number" value={thresholdInput} onChange={(e) => setThresholdInput(e.target.value)} placeholder="Confirmation threshold"></input>
                 <button type="submit">Submit</button>
             </form>
@@ -91,7 +134,7 @@ const Multisig = () => {
                         <tr key={idx}>
                             <td><a href={`https://etherscan.io/address/${owner}`} target="_blank" rel="noreferrer">{owner}</a></td>
                             <td><input value={nickNames[owner]} onChange={(e) => {nickNames[owner] = e.target.value}}></input></td>
-                            <td><button>Remove</button></td>
+                            <td><button onClick={() => removeOwner(owner)}>Remove</button></td>
                         </tr>
                         );
                     })}
@@ -104,7 +147,8 @@ const Multisig = () => {
         <div className="multisig-container">
             <h1>Multisig Wallet</h1>
             {safe && <p>Confirmation Threshold: {confirmationThreshold}</p>}
-            {renderWalletForm(safe)}
+            {!safe && renderWalletCreate()}
+            {safe && renderWalletEdit()}
             {safe && renderOwnerTable()}
         </div>
     )
