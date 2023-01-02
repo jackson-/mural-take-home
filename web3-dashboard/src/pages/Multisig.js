@@ -50,6 +50,8 @@ const Multisig = () => {
         setOwnerInput('');
         setThresholdInput('');
         try{
+            const isOwner = await safe.isOwner(newOwner);
+            console.log(isOwner);
             await safe.createAddOwnerTx(newOwner);
             const newOwners = [...owners]
             newOwners.push(newOwner)
@@ -77,13 +79,15 @@ const Multisig = () => {
         }
     }
 
-    const removeOwner = async (owner) => {
+    const removeOwner = async (removedOwner) => {
         try{
-            await safe.createRemoveOwnerTx(owner);
-            const index = owners.indexOf(owner);
+            const isOwner = await safe.isOwner(removedOwner);
+            console.log(isOwner);
+            await safe.createRemoveOwnerTx(removedOwner);
+            const index = owners.indexOf(removedOwner);
             const newOwners = [...owners]
             newOwners.splice(index, 1)
-            delete nickNames[owner]
+            delete nickNames[removedOwner]
             setOwners(newOwners)
         } catch(error) {
             console.log(error);

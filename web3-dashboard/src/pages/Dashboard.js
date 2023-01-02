@@ -67,6 +67,7 @@ const Dashboard = () => {
     }];
     try{
       const transactionHash = await provider.send('eth_sendTransaction', params)
+      console.log("HASH: ", transactionHash)
     } catch(error) {
       setErrorMessage(error.message)
     }
