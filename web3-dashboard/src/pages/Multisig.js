@@ -18,8 +18,8 @@ const Multisig = () => {
 
     const createWallet = async (e) => {
         e.preventDefault();
-        const newOwners = e.target[0].value.replace(/\s/g,'').split(',');
-        const newThreshold = e.target[1].value;
+        const inputOwners = e.target[0].value.replace(/\s/g,'').split(',');
+        const inputThreshold = e.target[1].value;
         setOwnerInput('');
         setThresholdInput('');
         try{
@@ -30,12 +30,13 @@ const Multisig = () => {
                 signerOrProvider: safeOwner
             })
             const safeFactory = await SafeFactory.create({ ethAdapter });
-            const safeAccountConfig = {owners: newOwners, threshold: newThreshold};
+            const safeAccountConfig = {owners: inputOwners, threshold: inputThreshold};
             const safeSdk = await safeFactory.deploySafe({safeAccountConfig});
+            const newOwners = await safeSdk.getOwners();
             for (let owner in newOwners) {
                 nickNames[owner] = '';
             }
-            setConfirmationThreshold(newThreshold);
+            setConfirmationThreshold(inputThreshold);
             setOwners(newOwners);
             setSafe(safeSdk);
         } catch(error) {
@@ -50,11 +51,10 @@ const Multisig = () => {
         setOwnerInput('');
         setThresholdInput('');
         try{
-            const isOwner = await safe.isOwner(newOwner);
-            console.log(isOwner);
-            await safe.createAddOwnerTx(newOwner);
-            const newOwners = [...owners]
-            newOwners.push(newOwner)
+            const safeTransaction = await safe.createAddOwnerTx({ownerAddress:newOwner, newThreshold:confirmationThreshold});
+            const txResponse = await safe.executeTransaction(safeTransaction)
+            await txResponse.transactionResponse?.wait()
+            const newOwners = await safe.getOwners();
             nickNames[newOwner] = ''
             setOwners(newOwners)
         } catch(error) {
@@ -70,7 +70,9 @@ const Multisig = () => {
         setThresholdInput('');
         try{
             if (newThreshold !== confirmationThreshold){
-                await safe.createChangeThresholdTx(newThreshold);
+                const safeTransaction = await safe.createChangeThresholdTx(newThreshold)
+                const txResponse = await safe.executeTransaction(safeTransaction)
+                await txResponse.transactionResponse?.wait()
                 setConfirmationThreshold(newThreshold);
             }
         } catch(error) {
@@ -81,13 +83,11 @@ const Multisig = () => {
 
     const removeOwner = async (removedOwner) => {
         try{
-            const isOwner = await safe.isOwner(removedOwner);
-            console.log(isOwner);
-            await safe.createRemoveOwnerTx(removedOwner);
-            const index = owners.indexOf(removedOwner);
-            const newOwners = [...owners]
-            newOwners.splice(index, 1)
+            const safeTransaction = await safe.createRemoveOwnerTx({ownerAddress:removedOwner, threshold:confirmationThreshold})
+            const txResponse = await safe.executeTransaction(safeTransaction)
+            await txResponse.transactionResponse?.wait()
             delete nickNames[removedOwner]
+            const newOwners = await safe.getOwners();
             setOwners(newOwners)
         } catch(error) {
             console.log(error);
